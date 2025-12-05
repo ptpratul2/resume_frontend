@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Calendar, Clock, MapPin, Video, FileText, Users, CheckCircle2, AlertCircle } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 
 interface Interviewer {
   name: string
@@ -28,6 +30,8 @@ interface Location {
 function EventPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
+
 
   const applicantId = searchParams.get('applicantId')
   const applicantName = searchParams.get('applicantName')
@@ -65,20 +69,29 @@ function EventPageContent() {
     fetchInterviewers()
     fetchInterviewRounds()
     fetchLocations()
-  }, [])
+  }, [csrfLoading])
 
+  // const fetchLocations = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `http://172.23.88.43:8000/api/resource/Location?fields=["name"]&limit_page_length=100`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     if (data && data.data) {
+  //       setLocations(data.data)
   const fetchLocations = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `http://172.23.88.43:8000/api/resource/Location?fields=["name"]&limit_page_length=100`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/resource/Location?fields=["name"]&limit_page_length=100`
       )
-      const data = await response.json()
+      const data = response.data
       if (data && data.data) {
         setLocations(data.data)
         console.log("Fetched locations:", data.data)
@@ -88,18 +101,26 @@ function EventPageContent() {
     }
   }
 
+  // const fetchInterviewRounds = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `http://172.23.88.43:8000/api/resource/Interview Round?fields=["name","round_name"]&limit_page_length=100`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     if (data && data.data) {
   const fetchInterviewRounds = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `http://172.23.88.43:8000/api/resource/Interview Round?fields=["name","round_name"]&limit_page_length=100`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/resource/Interview Round?fields=["name","round_name"]&limit_page_length=100`
       )
-      const data = await response.json()
+      const data = response.data
       if (data && data.data) {
         setInterviewRounds(data.data)
         console.log("Fetched interview rounds:", data.data)
@@ -114,18 +135,26 @@ function EventPageContent() {
     }
   }
 
+  // const fetchInterviewers = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `http://172.23.88.43:8000/api/resource/User?fields=["name","full_name","email"]&filters=[["enabled","=",1]]&limit_page_length=100`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     if (data && data.data) {
   const fetchInterviewers = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `http://172.23.88.43:8000/api/resource/User?fields=["name","full_name","email"]&filters=[["enabled","=",1]]&limit_page_length=100`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/resource/User?fields=["name","full_name","email"]&filters=[["enabled","=",1]]&limit_page_length=100`
       )
-      const data = await response.json()
+      const data = response.data
       if (data && data.data) {
         const filteredUsers = data.data.filter(
           (user: any) => user.name !== "Administrator" && user.name !== "Guest"
@@ -178,30 +207,59 @@ function EventPageContent() {
 
       console.log("Interview data:", JSON.stringify(interviewData, null, 2));
 
-      const response = await fetch(
-        `http://172.23.88.43:8000/api/resource/Interview`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(interviewData)
-        }
+      // const response = await fetch(
+      //   `http://172.23.88.43:8000/api/resource/Interview`,
+      //   {
+      //     method: 'POST',
+      //     credentials: 'include',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       'Accept': 'application/json'
+      //     },
+      //     body: JSON.stringify(interviewData)
+      //   }
+      // )
+      const response = await axiosInstance.post(
+        `/api/resource/Interview`,
+        interviewData
       )
-
-      const data = await response.json()
+      const data = response.data
       console.log("API Response:", data);
 
-      if (data && data.message) {
-        alert(data.message.message || "Interview created successfully!")
-        console.log("Created interview:", data)
+      // const data = await response.json()
+      // console.log("API Response:", data);
+
+      //     if (data && data.message) {
+      //       alert(data.message.message || "Interview created successfully!")
+      //       console.log("Created interview:", data)
+      //       router.back()
+      //     }
+      //   } catch (error: any) {
+      //     console.error("Error creating interview:", error)
+      //     alert("Failed to create interview: " + error.message)
+      //   } finally {
+      //     setIsSaving(false)
+      //   }
+      // }
+      if (response.status === 200 || response.status === 201) {
+        alert("Interview created successfully!")
+        console.log("Created interview:", response.data)
+        router.back()
+      } else {
+        // Handle unexpected response
+        alert("Interview created but received unexpected response")
         router.back()
       }
     } catch (error: any) {
       console.error("Error creating interview:", error)
-      alert("Failed to create interview: " + error.message)
+
+      // Show detailed error message
+      const errorMessage = error.response?.data?.message
+        || error.response?.data?.error
+        || error.message
+        || "Unknown error occurred"
+
+      alert("Failed to create interview: " + errorMessage)
     } finally {
       setIsSaving(false)
     }

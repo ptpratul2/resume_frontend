@@ -29,6 +29,8 @@ import {
   Mail
 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 
 const API_MODULE_PATH = "resume.api.interview_feedback"
 const API_BASE_URL = "http://172.23.88.43:8000"
@@ -68,6 +70,7 @@ interface ColumnConfig {
 function CandidateFeedbackForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
 
   // Get candidate info from URL params
   const candidateIdFromUrl = searchParams.get('candidateId')
@@ -172,7 +175,7 @@ function CandidateFeedbackForm() {
       }))
       console.log("✅ Auto-filled candidate name:", candidateNameFromUrl)
     }
-  }, [candidateNameFromUrl])
+  }, [candidateNameFromUrl, csrfLoading])
 
 
   useEffect(() => {
@@ -219,18 +222,26 @@ function CandidateFeedbackForm() {
     }
   }, [skillAssessments])
 
+  // const fetchInterviews = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_interviews`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const interviews = data?.message?.data || []
   const fetchInterviews = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_interviews`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_interviews`
       )
-      const data = await response.json()
+      const data = response.data
       const interviews = data?.message?.data || []
       setInterviews(interviews)
       console.log("✅ Fetched interviews:", interviews.length, interviews)
@@ -242,18 +253,26 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchInterviewers = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_interviewers`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const interviewers = data?.message?.data || []
   const fetchInterviewers = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_interviewers`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_interviewers`
       )
-      const data = await response.json()
+      const data = response.data
       const interviewers = data?.message?.data || []
       setInterviewers(interviewers)
       console.log("✅ Fetched interviewers:", interviewers.length, interviewers)
@@ -265,18 +284,26 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchResultOptions = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_result_options`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const options = data?.message?.data || []
   const fetchResultOptions = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_result_options`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_result_options`
       )
-      const data = await response.json()
+      const data = response.data
       const options = data?.message?.data || []
       setResultOptions(options)
       console.log("✅ Fetched result options:", options)
@@ -288,18 +315,26 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchSkills = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_skills`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const skills = data?.message?.data || []
   const fetchSkills = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_skills`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_skills`
       )
-      const data = await response.json()
+      const data = response.data
       const skills = data?.message?.data || []
       setAvailableSkills(skills)
       console.log("✅ Fetched skills:", skills)
@@ -311,18 +346,26 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchFinalScoreOptions = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_final_score_options`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const options = data?.message?.data || []
   const fetchFinalScoreOptions = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_final_score_options`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_final_score_options`
       )
-      const data = await response.json()
+      const data = response.data
       const options = data?.message?.data || []
       setFinalScoreOptions(options)
       console.log("✅ Fetched final score options:", options)
@@ -334,18 +377,26 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchNotShortlistedOptions = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_not_shortlisted_options`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const options = data?.message?.data || []
   const fetchNotShortlistedOptions = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_not_shortlisted_options`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_not_shortlisted_options`
       )
-      const data = await response.json()
+      const data = response.data
       const options = data?.message?.data || []
       setNotShortlistedOptions(options)
       console.log("✅ Fetched not shortlisted options:", options)
@@ -357,18 +408,26 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchWithdrawnReasonOptions = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_withdrawn_reason_options`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const options = data?.message?.data || []
   const fetchWithdrawnReasonOptions = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_withdrawn_reason_options`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_withdrawn_reason_options`
       )
-      const data = await response.json()
+      const data = response.data
       const options = data?.message?.data || []
       setWithdrawnReasonOptions(options)
       console.log("✅ Fetched withdrawn reason options:", options)
@@ -380,19 +439,28 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchApplicantRatingOptions = async () => {
+  //   try {
+  //     console.log("🔄 Fetching applicant rating options...")
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_applicant_rating_options`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const options = data?.message?.data || []
   const fetchApplicantRatingOptions = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
       console.log("🔄 Fetching applicant rating options...")
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_applicant_rating_options`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_applicant_rating_options`
       )
-      const data = await response.json()
+      const data = response.data
       const options = data?.message?.data || []
       setApplicantRatingOptions(options)
       console.log("✅ Fetched applicant rating options:", options)
@@ -406,19 +474,28 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchDepartmentOptions = async () => {
+  //   try {
+  //     console.log("🔄 Fetching department options...")
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_department_options`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const options = data?.message?.data || []
   const fetchDepartmentOptions = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
       console.log("🔄 Fetching department options...")
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_department_options`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_department_options`
       )
-      const data = await response.json()
+      const data = response.data
       const options = data?.message?.data || []
       setDepartmentOptions(options)
       console.log("✅ Fetched department options:", options)
@@ -432,19 +509,28 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchLocationOptions = async () => {
+  //   try {
+  //     console.log("🔄 Fetching location options...")
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_location_options`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const data = await response.json()
+  //     const options = data?.message?.data || []
   const fetchLocationOptions = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
       console.log("🔄 Fetching location options...")
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_location_options`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_location_options`
       )
-      const data = await response.json()
+      const data = response.data
       const options = data?.message?.data || []
       setLocationOptions(options)
       console.log("✅ Fetched location options:", options)
@@ -458,24 +544,37 @@ function CandidateFeedbackForm() {
     }
   }
 
+  // const fetchDesignationOptions = async () => {
+  //   try {
+  //     console.log("🔄 Fetching designation options...")
+  //     console.log("📍 API URL:", `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_designation_options`)
+
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_designation_options`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+
+  //     console.log("📡 Response status:", response.status, response.statusText)
+
+  //     const data = await response.json()
   const fetchDesignationOptions = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
       console.log("🔄 Fetching designation options...")
-      console.log("📍 API URL:", `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_designation_options`)
+      console.log("📍 API URL:", `/api/method/${API_MODULE_PATH}.get_designation_options`)
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_designation_options`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_designation_options`
       )
 
       console.log("📡 Response status:", response.status, response.statusText)
 
-      const data = await response.json()
+      const data = response.data
       console.log("📦 Raw API response:", data)
 
       const options = data?.message?.data || []
@@ -528,16 +627,21 @@ function CandidateFeedbackForm() {
         try {
           console.log("🔄 Fetching job applicant details for:", selectedInterview.job_applicant)
 
-          const response = await fetch(
-            `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_job_applicant_details?job_applicant=${selectedInterview.job_applicant}`,
-            {
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            }
+          // const response = await fetch(
+          //   `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_job_applicant_details?job_applicant=${selectedInterview.job_applicant}`,
+          //   {
+          //     credentials: 'include',
+          //     headers: {
+          //       'Content-Type': 'application/json',
+          //     },
+          //   }
+          // )
+          // const data = await response.json()
+          const response = await axiosInstance.get(
+            `/api/method/${API_MODULE_PATH}.get_job_applicant_details?job_applicant=${selectedInterview.job_applicant}`
           )
-          const data = await response.json()
+          const data = response.data
+
 
           console.log("📦 Full API Response:", data)
 
@@ -643,59 +747,97 @@ function CandidateFeedbackForm() {
 
     setIsSaving(true)
     try {
-      const formData = new URLSearchParams()
-      formData.append('interview', feedbackForm.interview)
-      formData.append('interviewer', feedbackForm.interviewer)
-      formData.append('result', feedbackForm.result)
-      if (feedbackForm.feedback) formData.append('feedback', feedbackForm.feedback)
+      // const formData = new URLSearchParams()
+      // formData.append('interview', feedbackForm.interview)
+      // formData.append('interviewer', feedbackForm.interviewer)
+      // formData.append('result', feedbackForm.result)
+      // if (feedbackForm.feedback) formData.append('feedback', feedbackForm.feedback)
 
-      // IMPORTANT: Make sure candidate_name is being sent
-      if (feedbackForm.candidate_name) {
-        formData.append('candidate_name', feedbackForm.candidate_name)
-        console.log("📝 Sending candidate_name:", feedbackForm.candidate_name)
-      }
+      // // IMPORTANT: Make sure candidate_name is being sent
+      // if (feedbackForm.candidate_name) {
+      //   formData.append('candidate_name', feedbackForm.candidate_name)
+      //   console.log("📝 Sending candidate_name:", feedbackForm.candidate_name)
+      // }
 
-      if (feedbackForm.interview_date) formData.append('interview_date', feedbackForm.interview_date)
-      if (feedbackForm.position_applied_for) formData.append('position_applied_for', feedbackForm.position_applied_for)
-      if (feedbackForm.department) formData.append('department', feedbackForm.department)
-      if (feedbackForm.location) formData.append('location', feedbackForm.location)
-      if (feedbackForm.new_position) formData.append('new_position', feedbackForm.new_position)
-      if (feedbackForm.replacement_position) formData.append('replacement_position', feedbackForm.replacement_position)
-      if (feedbackForm.applicant_rating) formData.append('applicant_rating', feedbackForm.applicant_rating)
-      if (feedbackForm.final_score_recommendation.length > 0) formData.append('final_score_recommendation', JSON.stringify(feedbackForm.final_score_recommendation))
-      if (feedbackForm.not_shortlisted_reason.length > 0) formData.append('not_shortlisted_reason', JSON.stringify(feedbackForm.not_shortlisted_reason))
-      if (feedbackForm.withdrawn_reason.length > 0) formData.append('withdrawn_reason', JSON.stringify(feedbackForm.withdrawn_reason))
-      if (feedbackForm.remarks) formData.append('remarks', feedbackForm.remarks)
+      // if (feedbackForm.interview_date) formData.append('interview_date', feedbackForm.interview_date)
+      // if (feedbackForm.position_applied_for) formData.append('position_applied_for', feedbackForm.position_applied_for)
+      // if (feedbackForm.department) formData.append('department', feedbackForm.department)
+      // if (feedbackForm.location) formData.append('location', feedbackForm.location)
+      // if (feedbackForm.new_position) formData.append('new_position', feedbackForm.new_position)
+      // if (feedbackForm.replacement_position) formData.append('replacement_position', feedbackForm.replacement_position)
+      // if (feedbackForm.applicant_rating) formData.append('applicant_rating', feedbackForm.applicant_rating)
+      // if (feedbackForm.final_score_recommendation.length > 0) formData.append('final_score_recommendation', JSON.stringify(feedbackForm.final_score_recommendation))
+      // if (feedbackForm.not_shortlisted_reason.length > 0) formData.append('not_shortlisted_reason', JSON.stringify(feedbackForm.not_shortlisted_reason))
+      // if (feedbackForm.withdrawn_reason.length > 0) formData.append('withdrawn_reason', JSON.stringify(feedbackForm.withdrawn_reason))
+      // if (feedbackForm.remarks) formData.append('remarks', feedbackForm.remarks)
 
-      if (validSkills.length > 0) {
-        const skillsToSend = validSkills.map(({ skill, rating }) => ({
+      // if (validSkills.length > 0) {
+      //   const skillsToSend = validSkills.map(({ skill, rating }) => ({
+      //     skill: skill.trim(),
+      //     rating: Number(rating)
+      //   }))
+      //   console.log("Skills being sent:", skillsToSend)
+      //   formData.append('skill_assessments', JSON.stringify(skillsToSend))
+      // }
+
+      // console.log("📤 Complete form data being sent:", Object.fromEntries(formData))
+      // console.log("📤 Candidate name in form:", feedbackForm.candidate_name)
+      const payload = {
+        interview: feedbackForm.interview,
+        interviewer: feedbackForm.interviewer,
+        result: feedbackForm.result,
+        feedback: feedbackForm.feedback || undefined,
+        candidate_name: feedbackForm.candidate_name || undefined,
+        interview_date: feedbackForm.interview_date || undefined,
+        position_applied_for: feedbackForm.position_applied_for || undefined,
+        department: feedbackForm.department || undefined,
+        location: feedbackForm.location || undefined,
+        new_position: feedbackForm.new_position || undefined,
+        replacement_position: feedbackForm.replacement_position || undefined,
+        applicant_rating: feedbackForm.applicant_rating || undefined,
+        final_score_recommendation: feedbackForm.final_score_recommendation.length > 0 ? feedbackForm.final_score_recommendation : undefined,
+        not_shortlisted_reason: feedbackForm.not_shortlisted_reason.length > 0 ? feedbackForm.not_shortlisted_reason : undefined,
+        withdrawn_reason: feedbackForm.withdrawn_reason.length > 0 ? feedbackForm.withdrawn_reason : undefined,
+        remarks: feedbackForm.remarks || undefined,
+        skill_assessments: validSkills.length > 0 ? validSkills.map(({ skill, rating }) => ({
           skill: skill.trim(),
           rating: Number(rating)
-        }))
-        console.log("Skills being sent:", skillsToSend)
-        formData.append('skill_assessments', JSON.stringify(skillsToSend))
+        })) : undefined
       }
 
-      console.log("📤 Complete form data being sent:", Object.fromEntries(formData))
-      console.log("📤 Candidate name in form:", feedbackForm.candidate_name)
+      console.log("📤 Complete payload being sent:", payload)
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.create_interview_feedback`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        }
+      // const response = await fetch(
+      //   `${API_BASE_URL}/api/method/${API_MODULE_PATH}.create_interview_feedback`,
+      //   {
+      //     method: 'POST',
+      //     credentials: 'include',
+      //     headers: {
+      //       'Content-Type': 'application/x-www-form-urlencoded'
+      //     },
+      //     body: formData
+      //   }
+      // )
+
+      // const data = await response.json()
+      // console.log("✅ Full API Response:", data)
+      const response = await axiosInstance.post(
+        `/api/method/${API_MODULE_PATH}.create_interview_feedback`,
+        payload
       )
 
-      const data = await response.json()
+      const data = response.data
       console.log("✅ Full API Response:", data)
 
-      if (response.ok && data.message) {
-        const feedbackName = data.message.name || data.message.doc?.name
+      // if (response.ok && data.message) {
+      //   const feedbackName = data.message.name || data.message.doc?.name
+      //   console.log("✅ Created feedback with ID:", feedbackName)
+      //   alert(`Interview Feedback ${feedbackName || ''} created successfully!`)
+
+      //   console.log("✅ Redirecting to /feedback page...")
+      //   router.push('/feedback')
+      if (response.status === 200 || response.status === 201) {
+        const feedbackName = data.message?.name || data.message?.doc?.name
         console.log("✅ Created feedback with ID:", feedbackName)
         alert(`Interview Feedback ${feedbackName || ''} created successfully!`)
 

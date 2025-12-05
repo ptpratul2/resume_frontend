@@ -31,7 +31,8 @@ import Link from "next/link"
 import { axiosConfig } from '@/lib/axios-config'
 import { useRouter } from "next/navigation"
 import { API_BASE_URL } from '@/lib/api-config'
-
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 interface Candidate {
   id: string
   applicant_name: string
@@ -67,6 +68,7 @@ export default function InterviewPage() {
   const router = useRouter();
   const [candidates, setCandidate] = useState<Candidate[]>([])
 
+  const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
   const [isLoading, setIsLoading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
 
@@ -82,21 +84,22 @@ export default function InterviewPage() {
   ])
 
   const fetchJobApplicant = async () => {
+    if (csrfLoading) return;
     setIsLoading(true)
     setApiError(null)
     try {
-      const applicantsResponse = await axios.get(
+      const applicantsResponse = await axiosInstance.get(
         `${API_BASE_URL}/api/resource/Job Applicant/?fields=["*"]`,
         {
-          ...axiosConfig,
+          // ...axiosConfig,
           timeout: 10000,
         }
       );
 
-      const interviewsResponse = await axios.get(
+      const interviewsResponse = await axiosInstance.get(
         `${API_BASE_URL}/api/resource/Interview/?fields=["*"]`,
         {
-          ...axiosConfig,
+          // ...axiosConfig,
           timeout: 10000,
         }
       );
@@ -162,7 +165,7 @@ export default function InterviewPage() {
 
   useEffect(() => {
     fetchJobApplicant()
-  }, [])
+  }, [csrfLoading])
 
   // derive unique lists for filters from fetched candidates
   const uniqueDesignations = Array.from(

@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
-import { axiosConfig, axiosConfigMultipart } from '@/lib/axios-config'
-import { ensureCSRFToken } from '@/lib/csrf-token'
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 import { API_BASE_URL } from '@/lib/api-config'
 import {
   Upload,
@@ -43,6 +43,9 @@ interface JobOpening {
 }
 
 export default function ResumeUploader() {
+  const { token: csrfToken, loading: csrfLoading } = useCSRFToken() // ADD THIS
+
+
   const [jobs, setJobs] = useState<JobOpening[]>([])
   const [selectedJobId, setSelectedJobId] = useState("")
   const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null)
@@ -55,11 +58,11 @@ export default function ResumeUploader() {
   const router = useRouter()
 
   useEffect(() => {
+    if (csrfLoading) return;
     async function fetchJobs() {
       try {
-        const res = await axios.get(
+        const res = await axiosInstance.get(
           `${API_BASE_URL}/api/resource/Job Opening?fields=["name","job_title","designation","company","location","department"]`,
-          axiosConfig,
         )
         setJobs(res.data.data)
 
@@ -79,7 +82,7 @@ export default function ResumeUploader() {
       }
     }
     fetchJobs()
-  }, [toast])
+  }, [csrfLoading, toast])
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -218,45 +221,57 @@ export default function ResumeUploader() {
       const successfulUploads: string[] = []
       const failedUploads: string[] = []
 
-      const csrfToken = await ensureCSRFToken()
-      console.log("DEBUG: Fetched CSRF Token:", csrfToken)
+      // const csrfToken = await ensureCSRFToken()
+      // console.log("DEBUG: Fetched CSRF Token:", csrfToken)
 
+      // for (let i = 0; i < files.length; i++) {
+      //   const file = files[i]
+      //   try {
+      //     const formData = new FormData()
+      //     formData.append("files", file)
+      //     formData.append("job_opening", selectedJobId)
+      //     // await axios.post("http://localhost:8000/api/method/resume.api.upload_and_process", formData, API_AUTH)
+      //     await axios.post(`${API_BASE_URL}/api/method/resume.api.upload_and_process.upload_and_process`, formData, {
+      //       ...axiosConfigMultipart,
+      //       headers: {
+      //         ...axiosConfigMultipart.headers,
+      //         'X-Frappe-CSRF-Token': csrfToken
+      //       }
+      //     })
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
         try {
           const formData = new FormData()
           formData.append("files", file)
           formData.append("job_opening", selectedJobId)
-          // await axios.post("http://localhost:8000/api/method/resume.api.upload_and_process", formData, API_AUTH)
-          await axios.post(`${API_BASE_URL}/api/method/resume.api.upload_and_process.upload_and_process`, formData, {
-            ...axiosConfigMultipart,
-            headers: {
-              ...axiosConfigMultipart.headers,
-              'X-Frappe-CSRF-Token': csrfToken
+
+          await axiosInstance.post(
+            '/api/method/resume.api.upload_and_process.upload_and_process',
+            formData,
+            {
+              headers: {
+                'Content-Type': undefined  // Force removal of default Content-Type
+              }
             }
-          })
+          )
+
           successfulUploads.push(file.name)
           setProcessedFiles((prev) => [...prev, file.name])
 
           const progress = ((i + 1) / files.length) * 100
           setUploadProgress(progress)
 
-          // Show progress toast for each file
           toast({
             title: `Processing ${file.name}`,
             description: `File ${i + 1} of ${files.length} processed successfully.`,
             duration: 2000,
           })
 
-          //navigation
-
-
         } catch (fileError) {
           console.error(`Failed to upload ${file.name}:`, fileError)
           failedUploads.push(file.name)
         }
       }
-
       // Final success/error summary
       if (successfulUploads.length === files.length) {
         toast({
@@ -590,13 +605,14 @@ export default function ResumeUploader() {
                   {/* Submit Button */}
                   <Button
                     type="submit"
-                    disabled={isLoading || files.length === 0 || !selectedJobId}
+                    disabled={isLoading || files.length === 0 || !selectedJobId || csrfLoading}
                     className="w-full h-12 text-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                   >
-                    {isLoading ? (
+                    {isLoading || csrfLoading ? (
                       <div className="flex items-center space-x-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>Processing...</span>
+                        {/* <span>Processing...</span> */}
+                        <span>{csrfLoading ? 'Initializing...' : 'Processing...'}</span>
                       </div>
                     ) : (
                       <div className="flex items-center space-x-2">

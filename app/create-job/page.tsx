@@ -31,6 +31,8 @@ import {
 import Link from "next/link"
 import { axiosConfig } from '@/lib/axios-config'
 import { API_BASE_URL } from '@/lib/api-config'
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 
 // export const API_AUTH = {
 //   headers: {
@@ -66,6 +68,7 @@ export default function CreateJobOpeningForm() {
     designations: [],
     locations: [],
   })
+  const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
@@ -77,14 +80,15 @@ export default function CreateJobOpeningForm() {
   ]
 
   useEffect(() => {
+    if (csrfLoading) return;
     async function fetchOptions() {
       try {
         const [companies, departments, employment_types, designations, locations] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/resource/Company?fields=["name"]`, axiosConfig),
-          axios.get(`${API_BASE_URL}/api/resource/Department?fields=["name"]`, axiosConfig),
-          axios.get(`${API_BASE_URL}/api/resource/Employment Type?fields=["name"]`, axiosConfig),
-          axios.get(`${API_BASE_URL}/api/resource/Designation?fields=["name"]`, axiosConfig),
-          axios.get(`${API_BASE_URL}/api/resource/Location?fields=["name"]`, axiosConfig),
+          axiosInstance.get(`${API_BASE_URL}/api/resource/Company?fields=["name"]`,),
+          axiosInstance.get(`${API_BASE_URL}/api/resource/Department?fields=["name"]`,),
+          axiosInstance.get(`${API_BASE_URL}/api/resource/Employment Type?fields=["name"]`,),
+          axiosInstance.get(`${API_BASE_URL}/api/resource/Designation?fields=["name"]`,),
+          axiosInstance.get(`${API_BASE_URL}/api/resource/Location?fields=["name"]`,),
         ])
         setOptions({
           companies: companies.data.data.map((d: any) => d.name),
@@ -111,7 +115,7 @@ export default function CreateJobOpeningForm() {
       }
     }
     fetchOptions()
-  }, [toast])
+  }, [csrfLoading])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -269,10 +273,9 @@ export default function CreateJobOpeningForm() {
     }
 
     try {
-      const res = await axios.post(
+      const res = await axiosInstance.post(
         `${API_BASE_URL}/api/method/resume.api.job_opening.create_job_opening`,
         payload,
-        axiosConfig,
       )
 
       console.log("API Response:", res.data)
@@ -778,21 +781,11 @@ export default function CreateJobOpeningForm() {
                     Next Step
                   </Button>
                 ) : (
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                  >
-                    {loading ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>Creating...</span>
-                      </div>
-                    ) : (
-                      "Create Job Opening"
-                    )}
+                  <Button disabled={loading || csrfLoading}>
+                    {loading || csrfLoading ? "Creating..." : "Create Job"}
                   </Button>
-                )}
+                )
+                }
               </div>
             </form>
           </CardContent>
