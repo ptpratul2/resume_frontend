@@ -17,7 +17,9 @@ const API_MODULE_PATH = "resume.api.candidate_feedback"
 //     Authorization: `token 09481bf19b467f7:39bb84748d00090`,
 //   },
 // }
-import { axiosConfig } from '@/lib/axios-config'
+// import { axiosConfig } from '@/lib/axios-config'
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 
 interface SkillAssessment {
   skill: string
@@ -76,28 +78,61 @@ export default function FeedbackPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
 
+  const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
   useEffect(() => {
+    if (csrfLoading) return;  // ADD THIS
     fetchFeedbackList()
-  }, [])
+  }, [csrfLoading])
 
+  // const fetchFeedbackList = async () => {
+  //   setLoading(true)
+  //   setError(null)
+
+  //   try {
+  //     console.log("🔄 Fetching feedback list from:", `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_candidate_feedback_list`)
+
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_candidate_feedback_list`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+
+  //     const result = await response.json()
+  //     console.log("📦 Raw API Response:", result)
+
+  //     if (result.message?.success) {
+  //       setFeedbackList(result.message.data)
+  //       console.log("✅ Fetched feedback list:", result.message.data.length, "records")
+  //     } else {
+  //       setError(result.message?.error || "Failed to fetch feedback")
+  //       setFeedbackList([])
+  //       console.error("⚠️ API returned success=false:", result)
+  //     }
+  //   } catch (err: any) {
+  //     console.error("❌ Error fetching feedback list:", err)
+  //     setError(err.message || "Network error")
+  //     setFeedbackList([])
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
   const fetchFeedbackList = async () => {
+    if (csrfLoading) return;  // ADD THIS
     setLoading(true)
     setError(null)
 
     try {
-      console.log("🔄 Fetching feedback list from:", `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_candidate_feedback_list`)
+      console.log("🔄 Fetching feedback list from:", `/api/method/${API_MODULE_PATH}.get_candidate_feedback_list`)
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_candidate_feedback_list`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_candidate_feedback_list`
       )
 
-      const result = await response.json()
+      const result = response.data
       console.log("📦 Raw API Response:", result)
 
       if (result.message?.success) {
@@ -168,12 +203,24 @@ export default function FeedbackPage() {
     )
   }
 
-  if (loading) {
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+  //       <div className="text-center space-y-4">
+  //         <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
+  //         <p className="text-muted-foreground">Loading feedback data...</p>
+  //       </div>
+  //     </div>
+  //   )
+  // }
+  if (loading || csrfLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
-          <p className="text-muted-foreground">Loading feedback data...</p>
+          <p className="text-muted-foreground">
+            {csrfLoading ? "Initializing..." : "Loading feedback data..."}
+          </p>
         </div>
       </div>
     )

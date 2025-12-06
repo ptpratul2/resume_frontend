@@ -22,6 +22,8 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { API_BASE_URL } from '@/lib/api-config'
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 
 interface ApplicantDocument {
     name: string
@@ -54,39 +56,96 @@ export default function DocumentVerifyListPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedDoc, setSelectedDoc] = useState<ApplicantDocument | null>(null)
 
-    useEffect(() => {
-        fetchDocuments()
-    }, [])
+    const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
 
+
+    useEffect(() => {
+        if (csrfLoading) return;  // ADD THIS
+        fetchDocuments()
+    }, [csrfLoading])
+
+    // const fetchDocuments = async () => {
+    //     setLoading(true)
+    //     try {
+    //         const response = await fetch(
+    //             `${API_BASE_URL}/api/resource/Applicant Document?fields=["*"]&limit_page_length=999`,
+    //             {
+    //                 credentials: 'include',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                 },
+    //             }
+    //         )
+    //         const data = await response.json()
+
+    //         if (data && data.data) {
+    //             const documentsWithDetails = await Promise.all(
+    //                 data.data.map(async (doc: ApplicantDocument) => {
+    //                     if (doc.applicant_name) {
+    //                         try {
+    //                             const applicantResponse = await fetch(
+    //                                 `${API_BASE_URL}/api/resource/Job Applicant/${doc.applicant_name}`,
+    //                                 {
+    //                                     credentials: 'include',
+    //                                     headers: {
+    //                                         'Content-Type': 'application/json',
+    //                                     },
+    //                                 }
+    //                             )
+    //                             const applicantData = await applicantResponse.json()
+    //                             doc.applicant_details = applicantData.data
+    //                         } catch (error) {
+    //                             console.error("Error fetching applicant details:", error)
+    //                         }
+    //                     }
+
+    //                     if (doc.employee) {
+    //                         try {
+    //                             const employeeResponse = await fetch(
+    //                                 `${API_BASE_URL}/api/resource/Employee/${doc.employee}`,
+    //                                 {
+    //                                     credentials: 'include',
+    //                                     headers: {
+    //                                         'Content-Type': 'application/json',
+    //                                     },
+    //                                 }
+    //                             )
+    //                             const employeeData = await employeeResponse.json()
+    //                             doc.employee_details = employeeData.data
+    //                         } catch (error) {
+    //                             console.error("Error fetching employee details:", error)
+    //                         }
+    //                     }
+
+    //                     return doc
+    //                 })
+    //             )
+    //             setDocuments(documentsWithDetails)
+    //         }
+    //     } catch (error) {
+    //         console.error("Error fetching documents:", error)
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
     const fetchDocuments = async () => {
+        if (csrfLoading) return;  // ADD THIS
         setLoading(true)
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/api/resource/Applicant Document?fields=["*"]&limit_page_length=999`,
-                {
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
+            const response = await axiosInstance.get(
+                `${API_BASE_URL}/api/resource/Applicant Document?fields=["*"]&limit_page_length=999`
             )
-            const data = await response.json()
+            const data = response.data
 
             if (data && data.data) {
                 const documentsWithDetails = await Promise.all(
                     data.data.map(async (doc: ApplicantDocument) => {
                         if (doc.applicant_name) {
                             try {
-                                const applicantResponse = await fetch(
-                                    `${API_BASE_URL}/api/resource/Job Applicant/${doc.applicant_name}`,
-                                    {
-                                        credentials: 'include',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                        },
-                                    }
+                                const applicantResponse = await axiosInstance.get(
+                                    `/api/resource/Job Applicant/${doc.applicant_name}`
                                 )
-                                const applicantData = await applicantResponse.json()
+                                const applicantData = applicantResponse.data
                                 doc.applicant_details = applicantData.data
                             } catch (error) {
                                 console.error("Error fetching applicant details:", error)
@@ -95,16 +154,10 @@ export default function DocumentVerifyListPage() {
 
                         if (doc.employee) {
                             try {
-                                const employeeResponse = await fetch(
-                                    `${API_BASE_URL}/api/resource/Employee/${doc.employee}`,
-                                    {
-                                        credentials: 'include',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                        },
-                                    }
+                                const employeeResponse = await axiosInstance.get(
+                                    `${API_BASE_URL}/api/resource/Employee/${doc.employee}`
                                 )
-                                const employeeData = await employeeResponse.json()
+                                const employeeData = employeeResponse.data
                                 doc.employee_details = employeeData.data
                             } catch (error) {
                                 console.error("Error fetching employee details:", error)
@@ -123,24 +176,45 @@ export default function DocumentVerifyListPage() {
         }
     }
 
+    // const handleDelete = async (name: string) => {
+    //     if (!confirm("Are you sure you want to delete this document?")) {
+    //         return
+    //     }
+
+    //     try {
+    //         const response = await fetch(
+    //             `${API_BASE_URL}/api/resource/Applicant Document/${name}`,
+    //             {
+    //                 method: "DELETE",
+    //                 credentials: 'include',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                 },
+    //             }
+    //         )
+
+    //         if (response.ok) {
+    //             alert("Document deleted successfully!")
+    //             fetchDocuments()
+    //         } else {
+    //             alert("Failed to delete document")
+    //         }
+    //     } catch (error) {
+    //         console.error("Error deleting document:", error)
+    //         alert("Failed to delete document")
+    //     }
+    // }
     const handleDelete = async (name: string) => {
         if (!confirm("Are you sure you want to delete this document?")) {
             return
         }
 
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/api/resource/Applicant Document/${name}`,
-                {
-                    method: "DELETE",
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
+            const response = await axiosInstance.delete(
+                `/api/resource/Applicant Document/${name}`
             )
 
-            if (response.ok) {
+            if (response.status === 200) {
                 alert("Document deleted successfully!")
                 fetchDocuments()
             } else {

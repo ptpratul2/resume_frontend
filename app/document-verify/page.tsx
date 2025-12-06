@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Upload, X, Check, FileText, User, Briefcase, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
 import { API_BASE_URL } from '@/lib/api-config'
 import { useRouter } from "next/navigation"
-import { axiosConfig } from '@/lib/axios-config'
+// import { axiosConfig } from '@/lib/axios-config'
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 
 interface JobApplicant {
     name: string
@@ -35,6 +37,8 @@ interface ExistingDocument {
 
 export default function DocumentVerifyPage() {
     const router = useRouter()
+    const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
+
 
     const [documentForm, setDocumentForm] = useState({
         applicantName: "",
@@ -57,9 +61,11 @@ export default function DocumentVerifyPage() {
     const [isLoadingExisting, setIsLoadingExisting] = useState(false)
 
     useEffect(() => {
+        if (csrfLoading) return;  // ADD THIS
+
         fetchJobApplicants()
         fetchEmployees()
-    }, [])
+    }, [csrfLoading])
 
     useEffect(() => {
         if (documentForm.applicantName) {
@@ -70,18 +76,28 @@ export default function DocumentVerifyPage() {
         }
     }, [documentForm.applicantName])
 
+    // const fetchJobApplicants = async () => {
+    //     try {
+    //         const response = await fetch(
+    //             `${API_BASE_URL}/api/resource/Job Applicant?fields=["name","applicant_name","status"]&limit_page_length=999`,
+    //             {
+    //                 credentials: 'include',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                 },
+    //             }
+    //         )
+    //         const data = await response.json()
+
+    //         if (data && data.data) {
+    //             setJobApplicants(data.data)
     const fetchJobApplicants = async () => {
+        if (csrfLoading) return;  // ADD THIS
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/api/resource/Job Applicant?fields=["name","applicant_name","status"]&limit_page_length=999`,
-                {
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
+            const response = await axiosInstance.get(
+                `/api/resource/Job Applicant?fields=["name","applicant_name","status"]&limit_page_length=999`
             )
-            const data = await response.json()
+            const data = response.data
 
             if (data && data.data) {
                 setJobApplicants(data.data)
@@ -92,18 +108,28 @@ export default function DocumentVerifyPage() {
         }
     }
 
+    // const fetchEmployees = async () => {
+    //     try {
+    //         const response = await fetch(
+    //             `${API_BASE_URL}/api/resource/Employee?fields=["name","employee_name"]&limit_page_length=999`,
+    //             {
+    //                 credentials: 'include',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                 },
+    //             }
+    //         )
+    //         const data = await response.json()
+
+    //         if (data && data.data) {
+    //             setEmployees(data.data)
     const fetchEmployees = async () => {
+        if (csrfLoading) return;  // ADD THIS
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/api/resource/Employee?fields=["name","employee_name"]&limit_page_length=999`,
-                {
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
+            const response = await axiosInstance.get(
+                `/api/resource/Employee?fields=["name","employee_name"]&limit_page_length=999`
             )
-            const data = await response.json()
+            const data = response.data
 
             if (data && data.data) {
                 setEmployees(data.data)
@@ -114,19 +140,28 @@ export default function DocumentVerifyPage() {
         }
     }
 
+    // const fetchExistingDocument = async (applicantName: string) => {
+    // setIsLoadingExisting(true)
+    // try {
+    //     const response = await fetch(
+    //         `${API_BASE_URL}/api/resource/Applicant Document?filters=[["applicant_name","=","${applicantName}"]]&fields=["*"]&limit_page_length=1`,
+    //         {
+    //             credentials: 'include',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //         }
+    //     )
+    //     const data = await response.json()
+
+    //     if (data && data.data && data.data.length > 0) {
     const fetchExistingDocument = async (applicantName: string) => {
         setIsLoadingExisting(true)
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/api/resource/Applicant Document?filters=[["applicant_name","=","${applicantName}"]]&fields=["*"]&limit_page_length=1`,
-                {
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
+            const response = await axiosInstance.get(
+                `/api/resource/Applicant Document?filters=[["applicant_name","=","${applicantName}"]]&fields=["*"]&limit_page_length=1`
             )
-            const data = await response.json()
+            const data = response.data
 
             if (data && data.data && data.data.length > 0) {
                 const existingDoc = data.data[0] as ExistingDocument
@@ -194,20 +229,26 @@ export default function DocumentVerifyPage() {
             formData.append("docname", existingDocumentId || "new-applicant-doc-1")
             formData.append("fieldname", filename)
 
-            const response = await fetch(`${API_BASE_URL}/api/method/frappe.handler.upload_file`, {
-                method: "POST",
-                credentials: 'include',
-                body: formData,
-            })
+            // const response = await fetch(`${API_BASE_URL}/api/method/frappe.handler.upload_file`, {
+            //     method: "POST",
+            //     credentials: 'include',
+            //     body: formData,
+            // })
+            const response = await axiosInstance.post(
+                `${API_BASE_URL}/api/method/frappe.handler.upload_file`,
+                formData
+            )
 
-            if (!response.ok) {
-                console.error(`Upload failed for ${filename}:`, response.status)
-                const errorData = await response.json()
-                console.error("Error details:", errorData)
-                return null
-            }
+            // if (!response.ok) {
+            //     console.error(`Upload failed for ${filename}:`, response.status)
+            //     const errorData = await response.json()
+            //     console.error("Error details:", errorData)
+            //     return null
+            // }
 
-            const data = await response.json()
+            // const data = await response.json()
+            // console.log(`File upload response for ${filename}:`, data)
+            const data = response.data
             console.log(`File upload response for ${filename}:`, data)
 
             if (data && data.message && data.message.file_url) {
@@ -290,33 +331,52 @@ export default function DocumentVerifyPage() {
 
             console.log("Document data to save:", docData)
 
+            // let response
+            // if (existingDocumentId) {
+            //     console.log("Updating existing document:", existingDocumentId)
+            //     response = await fetch(
+            //         `${API_BASE_URL}/api/resource/Applicant Document/${existingDocumentId}`,
+            //         {
+            //             method: "PUT",
+            //             headers: {
+            //                 Authorization: `token 09481bf19b467f7:39bb84748d00090`,
+            //                 "Content-Type": "application/json",
+            //             },
+            //             body: JSON.stringify(docData),
+            //         }
+            //     )
+            // } else {
+            //     console.log("Creating new document")
+            //     response = await fetch(`${API_BASE_URL}/api/resource/Applicant Document`, {
+            //         method: "POST",
+            //         headers: {
+            //             Authorization: `token 09481bf19b467f7:39bb84748d00090`,
+            //             "Content-Type": "application/json",
+            //         },
+            //         body: JSON.stringify(docData),
+            //     })
+            // }
+
+            // const data = await response.json()
+            // console.log("API Response:", data)
             let response
             if (existingDocumentId) {
                 console.log("Updating existing document:", existingDocumentId)
-                response = await fetch(
+                // REPLACE THIS:
+                response = await axiosInstance.put(
                     `${API_BASE_URL}/api/resource/Applicant Document/${existingDocumentId}`,
-                    {
-                        method: "PUT",
-                        headers: {
-                            Authorization: `token 09481bf19b467f7:39bb84748d00090`,
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(docData),
-                    }
+                    docData
                 )
             } else {
                 console.log("Creating new document")
-                response = await fetch(`${API_BASE_URL}/api/resource/Applicant Document`, {
-                    method: "POST",
-                    headers: {
-                        Authorization: `token 09481bf19b467f7:39bb84748d00090`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(docData),
-                })
+                // REPLACE THIS:
+                response = await axiosInstance.post(
+                    `${API_BASE_URL}/api/resource/Applicant Document`,
+                    docData
+                )
             }
 
-            const data = await response.json()
+            const data = response.data
             console.log("API Response:", data)
 
             if (data && data.data) {

@@ -248,11 +248,11 @@ export default function ResumeUploader() {
           await axiosInstance.post(
             '/api/method/resume.api.upload_and_process.upload_and_process',
             formData,
-            {
-              headers: {
-                'Content-Type': undefined  // Force removal of default Content-Type
-              }
-            }
+            // {
+            //   headers: {
+            //     'Content-Type': undefined  // Force removal of default Content-Type
+            //   }
+            // }
           )
 
           successfulUploads.push(file.name)

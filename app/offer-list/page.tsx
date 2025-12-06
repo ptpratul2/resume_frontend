@@ -6,24 +6,45 @@ import { API_BASE_URL } from '@/lib/api-config'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Mail, Calendar, Building2, User, FileText, Briefcase, FileCheck, Search, Filter } from "lucide-react"
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 
 export default function OfferListPage() {
     const [offers, setOffers] = useState<any[]>([])
     const [selectedOffer, setSelectedOffer] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
+    const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
 
 
+
+    // const fetchOffers = async () => {
+    //     setLoading(true)
+    //     try {
+    //         const res = await fetch(`${API_BASE_URL}/api/method/resume.api.get_job_offer_list`, {
+    //             credentials: 'include',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //         })
+    //         const jsonData = await res.json()
+    //         const data = jsonData?.message?.data || []
+    //         setOffers(data)
+    //     } catch (err) {
+    //         console.error("Error fetching offers:", err)
+    //         setOffers([])
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
     const fetchOffers = async () => {
+        if (csrfLoading) return;  // ADD THIS
         setLoading(true)
         try {
-            const res = await fetch(`${API_BASE_URL}/api/method/resume.api.get_job_offer_list`, {
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            })
-            const jsonData = await res.json()
+            const res = await axiosInstance.get(
+                `/api/method/resume.api.offer_letter.get_job_offer_list`
+            )
+            const jsonData = res.data
             const data = jsonData?.message?.data || []
             setOffers(data)
         } catch (err) {
@@ -34,16 +55,32 @@ export default function OfferListPage() {
         }
     }
 
+    // const fetchOfferDetails = async (name: string) => {
+    //     setLoading(true)
+    //     try {
+    //         const res = await fetch(`${API_BASE_URL}/api/method/resume.api.get_job_offer_details?job_offer_name=${encodeURIComponent(name)}`, {
+    //             credentials: 'include',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //         })
+    //         const jsonData = await res.json()
+    //         const data = jsonData?.message?.data
+    //         setSelectedOffer(data)
+    //     } catch (err) {
+    //         console.error("Error fetching offer details:", err)
+    //         setSelectedOffer(null)
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
     const fetchOfferDetails = async (name: string) => {
         setLoading(true)
         try {
-            const res = await fetch(`${API_BASE_URL}/api/method/resume.api.get_job_offer_details?job_offer_name=${encodeURIComponent(name)}`, {
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            })
-            const jsonData = await res.json()
+            const res = await axiosInstance.get(
+                `/api/method/resume.api.offer_letter.get_job_offer_details?job_offer_name=${encodeURIComponent(name)}`
+            )
+            const jsonData = res.data
             const data = jsonData?.message?.data
             setSelectedOffer(data)
         } catch (err) {
@@ -53,6 +90,7 @@ export default function OfferListPage() {
             setLoading(false)
         }
     }
+
     const filteredOffers = offers.filter((offer) => {
         const searchLower = searchQuery.toLowerCase()
         return (
@@ -74,14 +112,25 @@ export default function OfferListPage() {
     }
 
     useEffect(() => {
+        if (csrfLoading) return;
         fetchOffers()
-    }, [])
+    }, [csrfLoading])
 
-    if (loading) return (
+    // if (loading) return (
+    //     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+    //         <div className="flex flex-col items-center gap-4">
+    //             <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+    //             <p className="text-lg font-medium text-slate-600">Loading offers...</p>
+    //         </div>
+    //     </div>
+    // )
+    if (loading || csrfLoading) return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
                 <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-lg font-medium text-slate-600">Loading offers...</p>
+                <p className="text-lg font-medium text-slate-600">
+                    {csrfLoading ? "Initializing..." : "Loading offers..."}
+                </p>
             </div>
         </div>
     )

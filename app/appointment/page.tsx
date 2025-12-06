@@ -28,6 +28,8 @@ import {
   Briefcase
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 
 interface AcceptedCandidate {
   name: string
@@ -78,6 +80,8 @@ export default function AppointmentPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [savedAppointment, setSavedAppointment] = useState<any>(null)
 
+  const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
+
   const [appointmentDetails, setAppointmentDetails] = useState({
     job_applicant: "",
     applicant_name: "",
@@ -102,27 +106,79 @@ export default function AppointmentPage() {
 
 
   useEffect(() => {
+    if (csrfLoading) return;  // ADD THIS
     fetchAcceptedOffers()
     fetchTemplates()
-  }, [])
+  }, [csrfLoading])
 
+  // const fetchAcceptedOffers = async () => {
+  //   setLoading(true)
+  //   setError(null)
+  //   try {
+  //     const res = await fetch(`${API_BASE_URL}/api/method/resume.api.appointment_letter.get_accepted_job_offers`, {
+  //       method: 'GET',
+  //       credentials: 'include',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       }
+  //     })
+
+  //     if (!res.ok) {
+  //       throw new Error(`HTTP error! status: ${res.status} `)
+  //     }
+
+  //     const jsonData = await res.json()
+  //     if (jsonData?.message?.success) {
+  //       const candidates = jsonData.message.data || []
+
+  //       // Check appointment letter status for each candidate
+  //       const candidatesWithStatus = await Promise.all(
+  //         candidates.map(async (candidate: AcceptedCandidate) => {
+  //           try {
+  //             const statusRes = await fetch(
+  //               `${API_BASE_URL}/api/method/resume.api.appointment_letter.check_appointment_letter_exists?job_applicant=${encodeURIComponent(candidate.name)}`,
+  //               {
+  //                 method: 'GET',
+  //                 credentials: 'include',
+  //                 headers: { 'Content-Type': 'application/json' }
+  //               }
+  //             )
+
+  //             if (statusRes.ok) {
+  //               const statusData = await statusRes.json()
+  //               return {
+  //                 ...candidate,
+  //                 appointment_letter_status: statusData?.message?.exists ? "Close" : "Open"
+  //               }
+  //             }
+  //           } catch (err) {
+  //             console.error("Error checking status:", err)
+  //           }
+  //           return { ...candidate, appointment_letter_status: "Open" }
+  //         })
+  //       )
+
+  //       setAcceptedCandidates(candidatesWithStatus)
+  //     } else {
+  //       setError("Failed to fetch accepted offers")
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching offers:", err)
+  //     setError("Error fetching accepted offers. Please try again.")
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
   const fetchAcceptedOffers = async () => {
+    if (csrfLoading) return;  // ADD THIS
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE_URL}/api/method/resume.api.get_accepted_job_offers`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
+      const res = await axiosInstance.get(
+        `/api/method/resume.api.appointment_letter.get_accepted_job_offers`
+      )
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status} `)
-      }
-
-      const jsonData = await res.json()
+      const jsonData = res.data
       if (jsonData?.message?.success) {
         const candidates = jsonData.message.data || []
 
@@ -130,26 +186,19 @@ export default function AppointmentPage() {
         const candidatesWithStatus = await Promise.all(
           candidates.map(async (candidate: AcceptedCandidate) => {
             try {
-              const statusRes = await fetch(
-                `${API_BASE_URL}/api/method/resume.api.check_appointment_letter_exists?job_applicant=${encodeURIComponent(candidate.name)}`,
-                {
-                  method: 'GET',
-                  credentials: 'include',
-                  headers: { 'Content-Type': 'application/json' }
-                }
+              const statusRes = await axiosInstance.get(
+                `/api/method/resume.api.appointment_letter.check_appointment_letter_exists?job_applicant=${encodeURIComponent(candidate.name)}`
               )
 
-              if (statusRes.ok) {
-                const statusData = await statusRes.json()
-                return {
-                  ...candidate,
-                  appointment_letter_status: statusData?.message?.exists ? "Close" : "Open"
-                }
+              const statusData = statusRes.data
+              return {
+                ...candidate,
+                appointment_letter_status: statusData?.message?.exists ? "Close" : "Open"
               }
             } catch (err) {
               console.error("Error checking status:", err)
+              return { ...candidate, appointment_letter_status: "Open" }
             }
-            return { ...candidate, appointment_letter_status: "Open" }
           })
         )
 
@@ -165,21 +214,36 @@ export default function AppointmentPage() {
     }
   }
 
+  // const fetchTemplates = async () => {
+  //   try {
+  //     const res = await fetch(`${API_BASE_URL}/api/method/resume.api.appointment_letter.get_appointment_letter_templates`, {
+  //       method: 'GET',
+  //       credentials: 'include',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       }
+  //     })
+
+  //     if (!res.ok) {
+  //       throw new Error(`HTTP error! status: ${res.status} `)
+  //     }
+
+  //     const jsonData = await res.json()
+  //     if (jsonData?.message?.success) {
+  //       setTemplates(jsonData.message.data || [])
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching templates:", err)
+  //   }
+  // }
   const fetchTemplates = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const res = await fetch(`${API_BASE_URL}/api/method/resume.api.get_appointment_letter_templates`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
+      const res = await axiosInstance.get(
+        `/api/method/resume.api.appointment_letter.get_appointment_letter_templates`
+      )
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status} `)
-      }
-
-      const jsonData = await res.json()
+      const jsonData = res.data
       if (jsonData?.message?.success) {
         setTemplates(jsonData.message.data || [])
       }
@@ -188,22 +252,37 @@ export default function AppointmentPage() {
     }
   }
 
+  // const fetchAppointmentLetterDetails = async (jobApplicant: string) => {
+  //   try {
+  //     const res = await fetch(
+  //       `${API_BASE_URL}/api/method/resume.api.appointment_letter.get_appointment_letter_by_job_applicant?job_applicant=${encodeURIComponent(jobApplicant)}`,
+  //       {
+  //         method: 'GET',
+  //         credentials: 'include',
+  //         headers: { 'Content-Type': 'application/json' }
+  //       }
+  //     )
+
+  //     if (!res.ok) {
+  //       throw new Error(`HTTP error! status: ${res.status} `)
+  //     }
+
+  //     const jsonData = await res.json()
+  //     if (jsonData?.message?.success && jsonData?.message?.data) {
+  //       return jsonData.message.data
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching appointment letter details:", err)
+  //   }
+  //   return null
+  // }
   const fetchAppointmentLetterDetails = async (jobApplicant: string) => {
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/method/resume.api.get_appointment_letter_by_job_applicant?job_applicant=${encodeURIComponent(jobApplicant)}`,
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' }
-        }
+      const res = await axiosInstance.get(
+        `/api/method/resume.api.appointment_letter.get_appointment_letter_by_job_applicant?job_applicant=${encodeURIComponent(jobApplicant)}`
       )
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status} `)
-      }
-
-      const jsonData = await res.json()
+      const jsonData = res.data
       if (jsonData?.message?.success && jsonData?.message?.data) {
         return jsonData.message.data
       }
@@ -251,22 +330,48 @@ export default function AppointmentPage() {
     })
   }
 
+  // const handleTemplateSelect = async (templateName: string) => {
+  //   setError(null)
+  //   try {
+  //     const res = await fetch(`${API_BASE_URL}/api/method/resume.api.appointment_letter.get_appointment_letter_template_details?template_name=${encodeURIComponent(templateName)}`, {
+  //       method: 'GET',
+  //       credentials: 'include',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       }
+  //     })
+
+  //     if (!res.ok) {
+  //       throw new Error(`HTTP error! status: ${res.status} `)
+  //     }
+
+  //     const jsonData = await res.json()
+
+  //     if (jsonData?.message?.success) {
+  //       const templateData: TemplateDetails = jsonData.message.data
+  //       setAppointmentDetails({
+  //         ...appointmentDetails,
+  //         appointment_letter_template: templateName,
+  //         introduction: templateData.introduction || "",
+  //         closing_notes: templateData.closing_notes || "",
+  //         terms: templateData.terms || []
+  //       })
+  //     } else {
+  //       setError("Error loading template: " + (jsonData?.message?.message || "Unknown error"))
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching template details:", err)
+  //     setError("Error fetching template details. Please try again.")
+  //   }
+  // }
   const handleTemplateSelect = async (templateName: string) => {
     setError(null)
     try {
-      const res = await fetch(`${API_BASE_URL}/api/method/resume.api.get_appointment_letter_template_details?template_name=${encodeURIComponent(templateName)}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
+      const res = await axiosInstance.get(
+        `/api/method/resume.api.appointment_letter.get_appointment_letter_template_details?template_name=${encodeURIComponent(templateName)}`
+      )
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status} `)
-      }
-
-      const jsonData = await res.json()
+      const jsonData = res.data
 
       if (jsonData?.message?.success) {
         const templateData: TemplateDetails = jsonData.message.data
@@ -330,6 +435,97 @@ export default function AppointmentPage() {
     return true
   }
 
+  // const handleCreateAppointment = async () => {
+  //   setError(null)
+  //   setSuccess(null)
+
+  //   if (!validateForm()) {
+  //     return
+  //   }
+
+  //   setLoading(true)
+  //   try {
+  //     const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/)
+  //     const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : ''
+
+  //     const headers: Record<string, string> = {
+  //       "Content-Type": "application/json",
+  //       "Accept": "application/json"
+  //     }
+
+  //     if (csrfToken) {
+  //       headers["X-Frappe-CSRF-Token"] = csrfToken
+  //     }
+
+  //     const res = await fetch(`${API_BASE_URL}/api/method/resume.api.appointment_letter.create_appointment_letter`, {
+  //       method: "POST",
+  //       credentials: 'include',
+  //       headers: headers,
+  //       body: JSON.stringify({ data: appointmentDetails })
+  //     })
+
+  //     if (!res.ok) {
+  //       if (res.status === 403) {
+  //         throw new Error("Permission denied. Make sure your Python backend has 'allow_guest=True' and 'ignore_permissions=True'")
+  //       } else if (res.status === 401) {
+  //         throw new Error("Authentication required. Please log in to Frappe")
+  //       } else if (res.status === 404) {
+  //         throw new Error("API endpoint not found. Please check the server configuration")
+  //       }
+  //       throw new Error(`HTTP error! status: ${res.status} `)
+  //     }
+
+  //     const jsonData = await res.json()
+
+  //     if (jsonData?.message?.success) {
+  //       setSuccess("Appointment Letter created successfully! (ID: " + jsonData.message.data.name + ")")
+
+  //       const previewData = {
+  //         appointmentId: jsonData.message.data.name,
+  //         job_applicant: jsonData.message.data.job_applicant || appointmentDetails.job_applicant,
+  //         candidateName: jsonData.message.data.applicant_name || selectedCandidate?.applicant_name,
+  //         designation: selectedCandidate?.designation,
+  //         company: jsonData.message.data.company || appointmentDetails.company,
+  //         appointment_date: jsonData.message.data.appointment_date || appointmentDetails.appointment_date,
+  //         appointment_letter_template: jsonData.message.data.appointment_letter_template || appointmentDetails.appointment_letter_template,
+  //         introduction: jsonData.message.data.introduction || appointmentDetails.introduction,
+  //         closing_notes: jsonData.message.data.closing_notes || appointmentDetails.closing_notes,
+  //         terms: jsonData.message.data.terms || appointmentDetails.terms
+  //       }
+
+  //       setSavedAppointment(previewData)
+
+  //       // Update the candidate status to "Close"
+  //       if (selectedCandidate) {
+  //         const updatedCandidates = acceptedCandidates.map(c =>
+  //           c.name === selectedCandidate.name
+  //             ? { ...c, appointment_letter_status: "Close" }
+  //             : c
+  //         )
+  //         setAcceptedCandidates(updatedCandidates)
+  //         setSelectedCandidate({ ...selectedCandidate, appointment_letter_status: "Close" })
+  //       }
+
+  //       setDocumentsChecklist({
+  //         aadhar: false,
+  //         pan: false,
+  //         passport: false,
+  //         education: false,
+  //         experience: false,
+  //         medical: false,
+  //         bankDetails: false,
+  //         photos: false,
+  //       })
+  //     } else {
+  //       setError("Error: " + (jsonData?.message?.message || jsonData?.message || "Unknown error"))
+  //     }
+  //   } catch (err) {
+  //     console.error("Error creating appointment:", err)
+  //     setError(err instanceof Error ? err.message : "Error creating appointment letter")
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
   const handleCreateAppointment = async () => {
     setError(null)
     setSuccess(null)
@@ -340,37 +536,12 @@ export default function AppointmentPage() {
 
     setLoading(true)
     try {
-      const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/)
-      const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : ''
+      const res = await axiosInstance.post(
+        `/api/method/resume.api.appointment_letter.create_appointment_letter`,
+        { data: appointmentDetails }
+      )
 
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      }
-
-      if (csrfToken) {
-        headers["X-Frappe-CSRF-Token"] = csrfToken
-      }
-
-      const res = await fetch(`${API_BASE_URL}/api/method/resume.api.create_appointment_letter`, {
-        method: "POST",
-        credentials: 'include',
-        headers: headers,
-        body: JSON.stringify({ data: appointmentDetails })
-      })
-
-      if (!res.ok) {
-        if (res.status === 403) {
-          throw new Error("Permission denied. Make sure your Python backend has 'allow_guest=True' and 'ignore_permissions=True'")
-        } else if (res.status === 401) {
-          throw new Error("Authentication required. Please log in to Frappe")
-        } else if (res.status === 404) {
-          throw new Error("API endpoint not found. Please check the server configuration")
-        }
-        throw new Error(`HTTP error! status: ${res.status} `)
-      }
-
-      const jsonData = await res.json()
+      const jsonData = res.data
 
       if (jsonData?.message?.success) {
         setSuccess("Appointment Letter created successfully! (ID: " + jsonData.message.data.name + ")")
@@ -440,10 +611,19 @@ export default function AppointmentPage() {
     }
   }
 
-  if (loading && acceptedCandidates.length === 0) {
+  // if (loading && acceptedCandidates.length === 0) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+  //       <div className="text-lg font-medium">Loading...</div>
+  //     </div>
+  //   )
+  // }
+  if ((loading || csrfLoading) && acceptedCandidates.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-lg font-medium">Loading...</div>
+        <div className="text-lg font-medium">
+          {csrfLoading ? "Initializing..." : "Loading..."}
+        </div>
       </div>
     )
   }

@@ -33,7 +33,9 @@ import axiosInstance from '@/lib/axios-instance'
 import { useCSRFToken } from '@/lib/use-csrf-token'
 
 const API_MODULE_PATH = "resume.api.interview_feedback"
-const API_BASE_URL = "http://172.23.88.43:8000"
+// const API_BASE_URL = "http://172.23.88.43:8000"
+import { API_BASE_URL } from '@/lib/api-config'
+
 // const API_AUTH = {
 //   headers: {
 //     Authorization: `token 09481bf19b467f7:39bb84748d00090`,
@@ -239,7 +241,7 @@ function CandidateFeedbackForm() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_interviews`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_interviews`
       )
       const data = response.data
       const interviews = data?.message?.data || []
@@ -270,7 +272,7 @@ function CandidateFeedbackForm() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_interviewers`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_interviewers`
       )
       const data = response.data
       const interviewers = data?.message?.data || []
@@ -301,7 +303,7 @@ function CandidateFeedbackForm() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_result_options`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_result_options`
       )
       const data = response.data
       const options = data?.message?.data || []
@@ -332,7 +334,7 @@ function CandidateFeedbackForm() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_skills`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_skills`
       )
       const data = response.data
       const skills = data?.message?.data || []
@@ -363,7 +365,7 @@ function CandidateFeedbackForm() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_final_score_options`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_final_score_options`
       )
       const data = response.data
       const options = data?.message?.data || []
@@ -394,7 +396,7 @@ function CandidateFeedbackForm() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_not_shortlisted_options`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_not_shortlisted_options`
       )
       const data = response.data
       const options = data?.message?.data || []
@@ -425,7 +427,7 @@ function CandidateFeedbackForm() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_withdrawn_reason_options`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_withdrawn_reason_options`
       )
       const data = response.data
       const options = data?.message?.data || []
@@ -458,7 +460,7 @@ function CandidateFeedbackForm() {
     try {
       console.log("🔄 Fetching applicant rating options...")
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_applicant_rating_options`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_applicant_rating_options`
       )
       const data = response.data
       const options = data?.message?.data || []
@@ -493,7 +495,7 @@ function CandidateFeedbackForm() {
     try {
       console.log("🔄 Fetching department options...")
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_department_options`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_department_options`
       )
       const data = response.data
       const options = data?.message?.data || []
@@ -528,7 +530,7 @@ function CandidateFeedbackForm() {
     try {
       console.log("🔄 Fetching location options...")
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_location_options`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_location_options`
       )
       const data = response.data
       const options = data?.message?.data || []
@@ -569,7 +571,7 @@ function CandidateFeedbackForm() {
       console.log("📍 API URL:", `/api/method/${API_MODULE_PATH}.get_designation_options`)
 
       const response = await axiosInstance.get(
-        `/api/method/${API_MODULE_PATH}.get_designation_options`
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_designation_options`
       )
 
       console.log("📡 Response status:", response.status, response.statusText)
@@ -638,7 +640,7 @@ function CandidateFeedbackForm() {
           // )
           // const data = await response.json()
           const response = await axiosInstance.get(
-            `/api/method/${API_MODULE_PATH}.get_job_applicant_details?job_applicant=${selectedInterview.job_applicant}`
+            `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_job_applicant_details?job_applicant=${selectedInterview.job_applicant}`
           )
           const data = response.data
 
@@ -822,7 +824,7 @@ function CandidateFeedbackForm() {
       // const data = await response.json()
       // console.log("✅ Full API Response:", data)
       const response = await axiosInstance.post(
-        `/api/method/${API_MODULE_PATH}.create_interview_feedback`,
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.create_interview_feedback`,
         payload
       )
 

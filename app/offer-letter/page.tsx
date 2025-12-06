@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation"
 import { axiosConfig } from '@/lib/axios-config'
 import { ArrowLeft, FileText, Mail, Calendar, Briefcase, Building2, Plus, Trash2, User, CheckCircle2, AlertCircle } from "lucide-react"
 
+import axiosInstance from '@/lib/axios-instance'
+import { useCSRFToken } from '@/lib/use-csrf-token'
 import { API_BASE_URL } from '@/lib/api-config'
 const API_MODULE_PATH = "resume.api.offer_letter"
 
@@ -43,6 +45,8 @@ interface OfferTerm {
 
 export default function JobOfferPage() {
   const router = useRouter()
+  const { token: csrfToken, loading: csrfLoading } = useCSRFToken()
+
   const [offerForm, setOfferForm] = useState({
     jobApplicant: "",
     applicantName: "",
@@ -75,11 +79,13 @@ export default function JobOfferPage() {
   ]
 
   useEffect(() => {
+    if (csrfLoading) return;  // ADD THIS
+
     fetchJobApplicants()
     fetchTemplates()
     fetchCompanies()
     fetchDesignations()
-  }, [])
+  }, [csrfLoading])
 
   useEffect(() => {
     if (offerForm.jobOfferTemplate) {
@@ -87,18 +93,28 @@ export default function JobOfferPage() {
     }
   }, [offerForm.jobOfferTemplate]);
 
+  // const fetchJobApplicants = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_job_applicants`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const result = await response.json()
+
+  //     const data = result?.message?.data || []
+  //     setJobApplicants(data)
   const fetchJobApplicants = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_job_applicants`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_job_applicants`
       )
-      const result = await response.json()
+      const result = response.data
 
       const data = result?.message?.data || []
       setJobApplicants(data)
@@ -111,18 +127,28 @@ export default function JobOfferPage() {
     }
   }
 
+  // const fetchTemplates = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_job_offer_templates`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const result = await response.json()
+
+  //     const data = result?.message?.data || []
+  //     setTemplates(data)
   const fetchTemplates = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_job_offer_templates`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_job_offer_templates`
       )
-      const result = await response.json()
+      const result = response.data
 
       const data = result?.message?.data || []
       setTemplates(data)
@@ -135,18 +161,28 @@ export default function JobOfferPage() {
     }
   }
 
+  // const fetchCompanies = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_companies`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const result = await response.json()
+
+  //     const data = result?.message?.data || []
+  //     setCompanies(data)
   const fetchCompanies = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_companies`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_companies`
       )
-      const result = await response.json()
+      const result = response.data
 
       const data = result?.message?.data || []
       setCompanies(data)
@@ -159,18 +195,28 @@ export default function JobOfferPage() {
     }
   }
 
+  // const fetchDesignations = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_designations`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const result = await response.json()
+
+  //     const data = result?.message?.data || []
+  //     setDesignations(data)
   const fetchDesignations = async () => {
+    if (csrfLoading) return;  // ADD THIS
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_designations`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_designations`
       )
-      const result = await response.json()
+      const result = response.data
 
       const data = result?.message?.data || []
       setDesignations(data)
@@ -183,18 +229,26 @@ export default function JobOfferPage() {
     }
   }
 
+  // const fetchTemplateTerms = async (templateName: string) => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_template_terms?template_name=${templateName}`,
+  //       {
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       }
+  //     )
+  //     const result = await response.json()
+
+  //     const terms = result?.message?.data || []
   const fetchTemplateTerms = async (templateName: string) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.get_template_terms?template_name=${templateName}`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.get(
+        `/api/method/${API_MODULE_PATH}.get_template_terms?template_name=${templateName}`
       )
-      const result = await response.json()
+      const result = response.data
 
       const terms = result?.message?.data || []
       const formattedTerms = terms.map((term: any, index: number) => ({
@@ -241,6 +295,46 @@ export default function JobOfferPage() {
     ))
   }
 
+  // const handleSave = async () => {
+  //   if (!offerForm.jobApplicant || !offerForm.applicantName || !offerForm.designation || !offerForm.company) {
+  //     alert("Please fill all required fields")
+  //     return
+  //   }
+
+  //   setIsSaving(true)
+  //   try {
+  //     const formData = new URLSearchParams()
+  //     formData.append('job_applicant', offerForm.jobApplicant)
+  //     formData.append('applicant_name', offerForm.applicantName)
+  //     if (offerForm.applicantEmail) formData.append('applicant_email', offerForm.applicantEmail)
+  //     if (offerForm.offerDate) formData.append('offer_date', offerForm.offerDate)
+  //     formData.append('designation', offerForm.designation)
+  //     formData.append('company', offerForm.company)
+  //     formData.append('status', offerForm.status)
+  //     if (offerForm.jobOfferTemplate) formData.append('job_offer_template', offerForm.jobOfferTemplate)
+
+  //     if (offerTerms.length > 0) {
+  //       formData.append('offer_terms', JSON.stringify(offerTerms))
+  //     }
+
+  //     console.log("Submitting job offer with data:", Object.fromEntries(formData))
+
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/method/${API_MODULE_PATH}.create_job_offer`,
+  //       {
+  //         method: 'POST',
+  //         credentials: 'include',
+  //         headers: {
+  //           'Content-Type': 'application/x-www-form-urlencoded'
+  //         },
+  //         body: formData
+  //       }
+  //     )
+
+  //     const result = await response.json()
+  //     const message = result?.message?.message || "Job Offer created successfully!"
+  //     alert(message)
+  //     router.push('/offer-list')
   const handleSave = async () => {
     if (!offerForm.jobApplicant || !offerForm.applicantName || !offerForm.designation || !offerForm.company) {
       alert("Please fill all required fields")
@@ -249,35 +343,28 @@ export default function JobOfferPage() {
 
     setIsSaving(true)
     try {
-      const formData = new URLSearchParams()
-      formData.append('job_applicant', offerForm.jobApplicant)
-      formData.append('applicant_name', offerForm.applicantName)
-      if (offerForm.applicantEmail) formData.append('applicant_email', offerForm.applicantEmail)
-      if (offerForm.offerDate) formData.append('offer_date', offerForm.offerDate)
-      formData.append('designation', offerForm.designation)
-      formData.append('company', offerForm.company)
-      formData.append('status', offerForm.status)
-      if (offerForm.jobOfferTemplate) formData.append('job_offer_template', offerForm.jobOfferTemplate)
-
-      if (offerTerms.length > 0) {
-        formData.append('offer_terms', JSON.stringify(offerTerms))
+      // CHANGE: Build JSON payload instead of URLSearchParams
+      const payload = {
+        job_applicant: offerForm.jobApplicant,
+        applicant_name: offerForm.applicantName,
+        applicant_email: offerForm.applicantEmail || undefined,
+        offer_date: offerForm.offerDate || undefined,
+        designation: offerForm.designation,
+        company: offerForm.company,
+        status: offerForm.status,
+        job_offer_template: offerForm.jobOfferTemplate || undefined,
+        offer_terms: offerTerms.length > 0 ? offerTerms : undefined
       }
 
-      console.log("Submitting job offer with data:", Object.fromEntries(formData))
+      console.log("Submitting job offer with data:", payload)
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/method/${API_MODULE_PATH}.create_job_offer`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        }
+      // REPLACE the fetch call:
+      const response = await axiosInstance.post(
+        `/api/method/${API_MODULE_PATH}.create_job_offer`,
+        payload
       )
 
-      const result = await response.json()
+      const result = response.data
       const message = result?.message?.message || "Job Offer created successfully!"
       alert(message)
       router.push('/offer-list')
@@ -288,6 +375,7 @@ export default function JobOfferPage() {
       setIsSaving(false)
     }
   }
+
 
   const getStatusColor = (status: string) => {
     switch (status) {

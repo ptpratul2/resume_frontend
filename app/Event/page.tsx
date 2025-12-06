@@ -11,6 +11,7 @@ import { ArrowLeft, Calendar, Clock, MapPin, Video, FileText, Users, CheckCircle
 import { useRouter, useSearchParams } from "next/navigation"
 import axiosInstance from '@/lib/axios-instance'
 import { useCSRFToken } from '@/lib/use-csrf-token'
+import { API_BASE_URL } from '@/lib/api-config'
 
 interface Interviewer {
   name: string
@@ -89,7 +90,7 @@ function EventPageContent() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/resource/Location?fields=["name"]&limit_page_length=100`
+        `${API_BASE_URL}/api/resource/Location?fields=["name"]&limit_page_length=100`
       )
       const data = response.data
       if (data && data.data) {
@@ -118,7 +119,7 @@ function EventPageContent() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/resource/Interview Round?fields=["name","round_name"]&limit_page_length=100`
+        `${API_BASE_URL}/api/resource/Interview Round?fields=["name","round_name"]&limit_page_length=100`
       )
       const data = response.data
       if (data && data.data) {
@@ -152,7 +153,7 @@ function EventPageContent() {
     if (csrfLoading) return;  // ADD THIS
     try {
       const response = await axiosInstance.get(
-        `/api/resource/User?fields=["name","full_name","email"]&filters=[["enabled","=",1]]&limit_page_length=100`
+        `${API_BASE_URL}/api/resource/User?fields=["name","full_name","email"]&filters=[["enabled","=",1]]&limit_page_length=100`
       )
       const data = response.data
       if (data && data.data) {
@@ -220,7 +221,7 @@ function EventPageContent() {
       //   }
       // )
       const response = await axiosInstance.post(
-        `/api/resource/Interview`,
+        `${API_BASE_URL}/api/resource/Interview`,
         interviewData
       )
       const data = response.data
